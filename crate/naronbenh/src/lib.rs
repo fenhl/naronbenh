@@ -1,9 +1,11 @@
 use {
     std::collections::HashSet,
+    chrono::prelude::*,
     image::{
         GrayImage,
         Luma,
     },
+    rayon::prelude::*,
 };
 
 const UPPER: [[isize; 3]; 16] = [
@@ -88,7 +90,10 @@ pub fn building_image(y: i16) -> GrayImage {
     )
 }
 
-pub fn perimeter_image() -> GrayImage {
+pub fn perimeter_image(verbose: bool) -> GrayImage {
+    if verbose {
+        eprintln!("{} Naron Benh: calculating main building", Local::now().format("%Y-%m-%d %H:%M:%S"));
+    }
     let min_x = 4000;
     let max_x = 4700;
     let min_z = -4500;
@@ -101,9 +106,15 @@ pub fn perimeter_image() -> GrayImage {
             }
         }
     }
-    GrayImage::from_fn(
-        u32::try_from(max_x - min_x).unwrap(),
-        u32::try_from(max_z - min_z).unwrap(),
-        |x, z| Luma([if is_in_perimeter_of(&main_building, min_x + i16::try_from(x).unwrap(), min_z + i16::try_from(z).unwrap()) { u8::MAX } else { u8::MIN }]),
-    )
+    if verbose {
+        eprintln!("{} Naron Benh: calculating perimeter", Local::now().format("%Y-%m-%d %H:%M:%S"));
+    }
+    let pixels = (min_z..max_z).into_par_iter()
+        .flat_map(|z| (min_x..max_x).into_par_iter().map(move |x| [x, z]))
+        .map(|[x, z]| if is_in_perimeter_of(&main_building, x, z) { u8::MAX } else { u8::MIN })
+        .collect();
+    if verbose {
+        eprintln!("{} Naron Benh: creating image", Local::now().format("%Y-%m-%d %H:%M:%S"));
+    }
+    GrayImage::from_vec(u32::try_from(max_x - min_x).unwrap(), u32::try_from(max_z - min_z).unwrap(), pixels).unwrap()
 }

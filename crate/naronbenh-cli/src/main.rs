@@ -7,7 +7,16 @@ use {
 };
 
 #[derive(clap::Parser)]
-enum Args {
+#[clap(version)]
+struct Args {
+    #[clap(short, long)]
+    verbose: bool,
+    #[clap(subcommand)]
+    subcommand: Subcommand,
+}
+
+#[derive(clap::Subcommand)]
+enum Subcommand {
     CheckPerimeter {
         x: i16,
         z: i16,
@@ -22,9 +31,9 @@ enum Args {
 }
 
 #[wheel::main]
-fn main(args: Args) -> Result<bool, ImageError> {
-    Ok(match args {
-        Args::CheckPerimeter { x, z } => {
+fn main(Args { verbose, subcommand }: Args) -> Result<bool, ImageError> {
+    Ok(match subcommand {
+        Subcommand::CheckPerimeter { x, z } => {
             let contained = is_in_perimeter(x, z);
             if contained {
                 println!("{x} {z} is within the Naron Benh perimeter")
@@ -33,7 +42,7 @@ fn main(args: Args) -> Result<bool, ImageError> {
             }
             contained
         }
-        Args::CheckBuilding { x, y, z } => {
+        Subcommand::CheckBuilding { x, y, z } => {
             let contained = is_in_building(x, y, z);
             if contained {
                 println!("{x} {z} is within the Naron Benh building")
@@ -42,11 +51,11 @@ fn main(args: Args) -> Result<bool, ImageError> {
             }
             contained
         }
-        Args::DrawPerimeter => {
-            perimeter_image().save_with_format("assets/perimeter.png", ImageFormat::Png)?;
+        Subcommand::DrawPerimeter => {
+            perimeter_image(verbose).save_with_format("assets/perimeter.png", ImageFormat::Png)?;
             true
         }
-        Args::DrawBuilding => {
+        Subcommand::DrawBuilding => {
             for y in -36..140 {
                 building_image(y).save_with_format(format!("assets/building/y{y}.png"), ImageFormat::Png)?;
             }
