@@ -1,0 +1,14 @@
+[package]
+name = "naronbenh-cli"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+clap = { version = "4.4.11", features = ["derive"] }
+image = { version = "0.24.7", default-features = false, features = ["png"] }
+naronbenh = { path = "../naronbenh" }
+wheel = { git = "https://github.com/fenhl/wheel", branch = "main" }

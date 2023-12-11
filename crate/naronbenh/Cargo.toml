@@ -1,0 +1,11 @@
+[package]
+name = "naronbenh"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+image = { version = "0.24.7", default-features = false }
