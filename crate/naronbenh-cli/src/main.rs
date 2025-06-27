@@ -1,8 +1,11 @@
 use {
+    async_proto::Protocol as _,
     image::{
         ImageError,
         ImageFormat,
     },
+    rayon::prelude::*,
+    wheel::fs,
     naronbenh::*,
 };
 
@@ -28,10 +31,12 @@ enum Subcommand {
     },
     DrawPerimeter,
     DrawBuilding,
+    DumpBuilding,
+    DumpPerimeter,
 }
 
 #[wheel::main]
-fn main(Args { verbose, subcommand }: Args) -> Result<bool, ImageError> {
+async fn main(Args { verbose, subcommand }: Args) -> Result<bool, ImageError> {
     Ok(match subcommand {
         Subcommand::CheckPerimeter { x, z } => {
             let contained = is_in_perimeter(x, z);
@@ -59,6 +64,22 @@ fn main(Args { verbose, subcommand }: Args) -> Result<bool, ImageError> {
             for y in -36..140 {
                 building_image(y).save_with_format(format!("assets/building/y{y}.png"), ImageFormat::Png)?;
             }
+            true
+        }
+        Subcommand::DumpBuilding => {
+            let mut data = Vec::default();
+            for layer in dump_main_building_layers(verbose).collect::<Vec<_>>() {
+                layer.write_sync(&mut data).unwrap();
+            }
+            fs::write("assets/naron-benh-building.bin", data).await.unwrap();
+            true
+        }
+        Subcommand::DumpPerimeter => {
+            let mut data = Vec::default();
+            for row in dump_perimeter_rows(verbose).collect::<Vec<_>>() {
+                row.write_sync(&mut data).unwrap();
+            }
+            fs::write("assets/naron-benh-perimeter.bin", data).await.unwrap();
             true
         }
     })

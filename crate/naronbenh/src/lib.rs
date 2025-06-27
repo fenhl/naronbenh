@@ -1,10 +1,15 @@
 use {
-    std::collections::HashSet,
+    std::{
+        collections::HashSet,
+        ops::Range,
+        sync::Arc,
+    },
     chrono::prelude::*,
     image::{
         GrayImage,
         Luma,
     },
+    itertools::Itertools as _,
     rayon::prelude::*,
 };
 
@@ -117,4 +122,74 @@ pub fn perimeter_image(verbose: bool) -> GrayImage {
         eprintln!("{} Naron Benh: creating image", Local::now().format("%Y-%m-%d %H:%M:%S"));
     }
     GrayImage::from_vec(u32::try_from(max_x - min_x).unwrap(), u32::try_from(max_z - min_z).unwrap(), pixels).unwrap()
+}
+
+pub fn dump_main_building_layers(verbose: bool) -> impl ParallelIterator<Item = Vec<Option<Range<i16>>>> {
+    let min_x = 4138;
+    let max_x = 4591;
+    let min_z = -4344;
+    let max_z = -3984;
+    (-36..140).into_par_iter()
+        .map(move |y| {
+            if verbose {
+                eprintln!("{} Naron Benh: calculating layer {y}", Local::now().format("%Y-%m-%d %H:%M:%S"));
+            }
+            let mut layer = HashSet::new();
+            for z in min_z..max_z {
+                for x in min_x..max_x {
+                    if is_in_building(x, y, z) {
+                        layer.insert([x, z]);
+                    }
+                }
+            }
+            (min_z..max_z).into_par_iter()
+                .map(move |z| {
+                    (min_x..max_x)
+                        .filter(|&x| layer.contains(&[x, z]))
+                        .minmax()
+                        .into_option()
+                        .map(|(min, max)| min..max + 1)
+                })
+                .collect()
+        })
+}
+
+pub fn dump_perimeter_rows(verbose: bool) -> impl ParallelIterator<Item = Range<i16>> {
+    if verbose {
+        eprintln!("{} Naron Benh: calculating main building", Local::now().format("%Y-%m-%d %H:%M:%S"));
+    }
+    let min_x = 4138;
+    let max_x = 4591;
+    let min_z = -4344;
+    let max_z = -3984;
+    let mut main_building = HashSet::default();
+    for z in min_z..max_z {
+        for x in min_x..max_x {
+            if (-36..140).any(|y| is_in_building(x, y, z)) {
+                main_building.insert([x, z]);
+            }
+        }
+    }
+    if verbose {
+        eprintln!("{} Naron Benh: calculating inner perimeter", Local::now().format("%Y-%m-%d %H:%M:%S"));
+    }
+    let main_building = Arc::new(main_building);
+    let inner_perimeter = (min_z..max_z).into_par_iter()
+        .flat_map(move |z| {
+            let main_building = Arc::clone(&main_building);
+            (min_x..max_x).into_par_iter()
+                .map(move |x| [x, z])
+                .filter(move |&[x, z]| is_in_perimeter_of(&main_building, x, z))
+        })
+        .collect::<HashSet<_>>();
+    if verbose {
+        eprintln!("{} Naron Benh: calculating perimeter wall", Local::now().format("%Y-%m-%d %H:%M:%S"));
+    }
+    (min_z..max_z).into_par_iter()
+        .map(move |z| {
+            let (min, max) = (min_x..max_x)
+                .filter(|&x| [[x, z], [x, z - 1], [x + 1, z], [x, z + 1], [x - 1, z]].into_iter().any(|coords| inner_perimeter.contains(&coords)))
+                .minmax().into_option().unwrap();
+            min..max + 1
+        })
 }

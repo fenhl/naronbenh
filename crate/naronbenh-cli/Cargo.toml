@@ -8,7 +8,9 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
+async-proto = "0.16.10"
 clap = { version = "4.4.11", features = ["derive"] }
 image = { version = "0.24.7", default-features = false, features = ["png"] }
 naronbenh = { path = "../naronbenh" }
+rayon = "1.8.0"
 wheel = { git = "https://github.com/fenhl/wheel", branch = "main" }

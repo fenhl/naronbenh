@@ -81,6 +81,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-proto"
+version = "0.16.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f949f615d269819f2536ec17d4791ec17727bbbbd5ad0c4cc56afd3e20c3655c"
+dependencies = [
+ "async-proto-derive",
+ "byteorder",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "async-proto-derive"
+version = "0.16.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38d29a34913072adf34c7e77d43a90d6b8d607015b242dcecad0f4a78c46191d"
+dependencies = [
+ "itertools 0.11.0",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "async-trait"
 version = "0.1.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -440,6 +464,15 @@ dependencies = [
 
 [[package]]
 name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25db6b064527c5d482d0423354fcd07a89a2dfe07b67892e62411946db7f07b0"
@@ -520,6 +553,7 @@ version = "2.0.0"
 dependencies = [
  "chrono",
  "image",
+ "itertools 0.12.0",
  "rayon",
 ]
 
@@ -527,9 +561,11 @@ dependencies = [
 name = "naronbenh-cli"
 version = "2.0.0"
 dependencies = [
+ "async-proto",
  "clap",
  "image",
  "naronbenh",
+ "rayon",
  "wheel",
 ]
 
@@ -871,7 +907,7 @@ dependencies = [
  "async-trait",
  "clap",
  "futures",
- "itertools",
+ "itertools 0.12.0",
  "thiserror",
  "tokio",
  "wheel-derive",
@@ -882,7 +918,7 @@ name = "wheel-derive"
 version = "0.13.1"
 source = "git+https://github.com/fenhl/wheel?branch=main#679dff957afca288fa4f15f1dc5606fe64ec0471"
 dependencies = [
- "itertools",
+ "itertools 0.12.0",
  "proc-macro2",
  "quote",
  "syn",
